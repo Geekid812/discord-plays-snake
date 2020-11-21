@@ -1,0 +1,12 @@
+{
+    "prefix": "s!",
+    "print_traceback": true,
+    "activity": "with Discord!",
+    "activity_type": "playing",
+    "twitter_controls": false,
+    "grid_height": 7,
+    "grid_width": 7,
+    "update_frequency": 30,
+    "tie_threshold": 5,
+    "embed_color": [173, 216, 230]
+}

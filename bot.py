@@ -34,6 +34,9 @@ class Bot(commands.Bot):
         if isinstance(error, asyncio.TimeoutError):
             return await ctx.send("Wow, you ignored me. I feel great now...")
 
+        if isinstance(error, asyncio.CancelledError):
+            return await ctx.send(":exclamation: The previous game has been stopped.")
+
         try:
             error_type = str(type(error))[8:-2]
             await ctx.send(f":flushed: Woah there, an error occured. That's awkward...\n`{error_type}`")
@@ -59,5 +62,5 @@ if __name__ == '__main__':
 
     bot = Bot(command_prefix=settings['prefix'], help_command=None, intents=discord.Intents.default())
     bot.add_cog(CommandsCog(bot))
-    bot.add_cog(SnakeCog(bot, settings))
+    bot.add_cog(SnakeCog(bot))
     bot.run(token)

@@ -29,15 +29,18 @@ class StopMessage(commands.CommandError):
         self.message = message
 
 class SnakeCog(commands.Cog):
-    def __init__(self, bot, settings):
+    def __init__(self, bot):
         self.bot = bot
-        self.settings = settings
+        self.game_loop = None
 
     @commands.command()
     @commands.has_guild_permissions(manage_guild=True)
     async def start(self, ctx, channel : discord.TextChannel):
         def response_check(message):
             return message.channel == ctx.channel and message.author == ctx.author
+        
+        with open("settings.json","r") as f:
+            settings = json.load(f)
 
         try:
             with open('save.json', 'r') as f:
@@ -57,21 +60,22 @@ class SnakeCog(commands.Cog):
             if response != 'yes':
                 return await ctx.send('That\'s neither `yes` or `no`. I\'m going to consider this as a no, just in case...')
             
-            save_data = self.create_save_data(channel, best=save_data['best'])
+            save_data = self.create_save_data(channel, settings, best=save_data['best'])
         
         except (OSError, json.JSONDecodeError):
             # No save data exists, so we can create one without any worries
-            save_data = self.create_save_data(channel)
+            save_data = self.create_save_data(channel, settings)
         
         self.save_data = save_data
         self.channel = channel
-        self.game_loop = self.snake_loop()
-        asyncio.get_event_loop().create_task(self.game_loop)
+
+        if self.game_loop: self.game_loop.cancel()
+        self.game_loop = asyncio.create_task(self.start_loop(ctx))
         await ctx.send(':checkered_flag: The game has now started!')
 
-    def create_save_data(self, channel, best=0):
-        height = self.settings['grid_height']
-        width = self.settings['grid_width']
+    def create_save_data(self, channel, settings, best=0):
+        height = settings['grid_height']
+        width = settings['grid_width']
         grid = numpy.zeros((height, width), dtype=int)
 
         # Place snake at the center
@@ -91,12 +95,12 @@ class SnakeCog(commands.Cog):
             'channel_id': channel.id,
             'message_id': 0,
             'configuration': {
-                'grid_height': self.settings['grid_height'],
-                'grid_width': self.settings['grid_width'],
-                'update_frequency': self.settings['update_frequency'],
-                'twitter_controls': self.settings['twitter_controls'],
-                'tie_threshold': self.settings['tie_threshold'],
-                'embed_color': self.settings['embed_color']
+                'grid_height': settings['grid_height'],
+                'grid_width': settings['grid_width'],
+                'update_frequency': settings['update_frequency'],
+                'twitter_controls': settings['twitter_controls'],
+                'tie_threshold': settings['tie_threshold'],
+                'embed_color': settings['embed_color']
             },
             'facial_expression': 0,
             'score': 0,
@@ -110,6 +114,12 @@ class SnakeCog(commands.Cog):
         
         return save
     
+    async def start_loop(self, ctx):
+        try:
+            await self.snake_loop()
+        except Exception as error:
+            await ctx.bot.on_command_error(ctx, error)
+
     async def snake_loop(self):
         while True:
             wait_until = datetime.fromtimestamp(self.save_data['next_update'])
@@ -278,7 +288,10 @@ class SnakeCog(commands.Cog):
 
         if dead:
             # Restart the game
-            self.save_data = self.create_save_data(channel, best=self.save_data['best'])
+            with open("settings.json","r") as f:
+                settings = json.load(f)
+            
+            self.save_data = self.create_save_data(channel, settings, best=self.save_data['best'])
             self.save_data['next_update'] = int(next_update.timestamp())
             await self.save()
             return

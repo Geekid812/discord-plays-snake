@@ -348,38 +348,33 @@ class SnakeCog(commands.Cog):
 
     def render_grid(self, grid, facial_expression: FacialExpression):
         # Emojis used to render the grid
-        BLANK = ':black_large_square:'
-        APPLE = ':apple:'
-        SNAKE_BODY = ':yellow_square:'
-        HEAD_NORMAL = ':flushed:'
-        HEAD_EATING = ':weary:'
-        HEAD_DEAD = ':dizzy_face:'
-        TAIL = ':yellow_circle:'
+        with open('emojis.json', 'r') as f:
+            emojis = json.load(f)
 
         rendered = ''
         for i in range(len(grid)):
             for j in range(len(grid[i])):
                 
                 if grid[i][j] == SnakeObject.BLANK:
-                    rendered += BLANK
+                    rendered += emojis['blank']
                 
                 elif grid[i][j] == SnakeObject.APPLE:
-                    rendered += APPLE
+                    rendered += emojis['apple']
                 
                 elif grid[i][j] == SnakeObject.HEAD:
 
                     if facial_expression == FacialExpression.NORMAL:
-                        rendered += HEAD_NORMAL
+                        rendered += emojis['head_normal']
                     elif facial_expression == FacialExpression.EATING:
-                        rendered += HEAD_EATING
+                        rendered += emojis['head_eating']
                     else:
-                        rendered += HEAD_DEAD
+                        rendered += emojis['head_dead']
                 
                 elif grid[i][j] == 1:
-                    rendered += TAIL
+                    rendered += emojis['tail']
 
                 else:
-                    rendered += SNAKE_BODY
+                    rendered += emojis['snake_body']
         
             # New line after each row
             rendered += '\n'

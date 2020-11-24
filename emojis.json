@@ -1,0 +1,9 @@
+{
+    "blank": ":black_large_square:",
+    "apple": ":apple:",
+    "snake_body": ":yellow_square:",
+    "head_normal": ":flushed:",
+    "head_eating": ":weary:",
+    "head_dead": ":dizzy_face:",
+    "tail": ":yellow_circle:"
+}

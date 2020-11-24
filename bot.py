@@ -29,7 +29,13 @@ class Bot(commands.Bot):
             return await ctx.send(f"The `{error.argument}` channel doesn't exist. Give me a valid text channel, please!")
 
         if isinstance(error, commands.CheckFailure):
+            if hasattr(error, 'missing_perms'):
+                return await ctx.send("You are not allowed to use this command.")
+
             return await ctx.send("Why are you trying to use commands in direct messages? That's pointless.")
+
+        if isinstance(error, commands.MissingRequiredArgument):
+            return await ctx.send(f":question: You are missing a required argument: `{error.param.name}`")
 
         if isinstance(error, asyncio.TimeoutError):
             return await ctx.send("Wow, you ignored me. I feel great now...")
@@ -61,6 +67,6 @@ if __name__ == '__main__':
         settings = load(f)
 
     bot = Bot(command_prefix=settings['prefix'], help_command=None, intents=discord.Intents.default())
-    bot.add_cog(CommandsCog(bot))
+    bot.add_cog(CommandsCog(bot, __version__))
     bot.add_cog(SnakeCog(bot))
     bot.run(token)

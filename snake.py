@@ -67,11 +67,31 @@ class SnakeCog(commands.Cog):
             save_data = self.create_save_data(channel, settings)
         
         self.save_data = save_data
-        self.channel = channel
 
         if self.game_loop: self.game_loop.cancel()
         self.game_loop = asyncio.create_task(self.start_loop(ctx))
         await ctx.send(':checkered_flag: The game has now started!')
+
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_guild=True)
+    async def resume(self, ctx):
+        with open("settings.json","r") as f:
+            settings = json.load(f)
+
+        try:
+            with open('save.json', 'r') as f:
+                save_data = json.load(f)
+        
+        except (OSError, json.JSONDecodeError):
+            # No save data exists
+            return await ctx.send(f":exclamation: No save data was found. Use `{ctx.prefix}start` to start a new game.")
+        
+        self.save_data = save_data
+
+        await ctx.send(':gear: Resuming...')
+        if self.game_loop: self.game_loop.cancel()
+        self.game_loop = asyncio.create_task(self.start_loop(ctx))
 
     def create_save_data(self, channel, settings, best=0):
         height = settings['grid_height']

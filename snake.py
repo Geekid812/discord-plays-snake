@@ -199,17 +199,15 @@ class SnakeCog(commands.Cog):
                 if is_tie: facing = self.save_data['facing']
     
             # Update the grid
-            # Make the snake move forward
-            new_grid = numpy.where(grid > 0, grid - 1, grid)
             # Check out of bounds
-            find_head = numpy.where(new_grid == SnakeObject.HEAD)
+            find_head = numpy.where(grid == SnakeObject.HEAD)
             head_position = list(zip(find_head[0], find_head[1]))[0]
 
             predicates = (
                 facing == 'left' and head_position[1] == 0,
-                facing == 'right' and head_position[1] == len(new_grid[0]) - 1,
+                facing == 'right' and head_position[1] == len(grid[0]) - 1,
                 facing == 'up' and head_position[0] == 0,
-                facing == 'down' and head_position[0] == len(new_grid) - 1
+                facing == 'down' and head_position[0] == len(grid) - 1
             )
 
             if any(predicates):
@@ -224,10 +222,10 @@ class SnakeCog(commands.Cog):
                     'down': (head_position[0] + 1, head_position[1]),
                 }
                 new_pos = next_pos[facing]
-                tile = new_grid[new_pos[0]][new_pos[1]]
+                tile = grid[new_pos[0]][new_pos[1]]
 
                 # Body Tile
-                if tile > 0:
+                if tile > 1:
                     # The snake crashed into itself, RIP
                     dead = True
                 
@@ -236,21 +234,23 @@ class SnakeCog(commands.Cog):
                     if self.save_data['score'] > self.save_data['best']:
                         self.save_data['best'] = self.save_data['score']
                     
-                    new_apple_pos = self.find_new_apple_position(new_grid)
-                    new_grid[new_apple_pos[0]][new_apple_pos[1]] = SnakeObject.APPLE
+                    new_apple_pos = self.find_new_apple_position(grid)
+                    grid[new_apple_pos[0]][new_apple_pos[1]] = SnakeObject.APPLE
                     facial_expression = FacialExpression.EATING
                     # Make the body grow
-                    new_grid = numpy.where(new_grid > 0, new_grid + 1, new_grid)
+                    grid = numpy.where(grid > 0, grid + 1, grid)
 
             if not dead:
+                # Make the snake move forward
+                grid = numpy.where(grid > 0, grid - 1, grid)
                 # Move head forward
-                new_grid[new_pos[0]][new_pos[1]] = SnakeObject.HEAD
-                new_grid[head_position[0]][head_position[1]] = self.save_data['score']
+                grid[new_pos[0]][new_pos[1]] = SnakeObject.HEAD
+                grid[head_position[0]][head_position[1]] = self.save_data['score']
             else:
                 facial_expression = FacialExpression.DEAD
             
             self.save_data['facing'] = facing
-            await self.send_grid(channel, grid=new_grid.tolist(), facial_expression=facial_expression)
+            await self.send_grid(channel, grid=grid.tolist(), facial_expression=facial_expression)
 
 
     async def send_grid(self, channel, grid=None, facial_expression=None):
@@ -354,6 +354,7 @@ class SnakeCog(commands.Cog):
         HEAD_NORMAL = ':flushed:'
         HEAD_EATING = ':weary:'
         HEAD_DEAD = ':dizzy_face:'
+        TAIL = ':yellow_circle:'
 
         rendered = ''
         for i in range(len(grid)):
@@ -374,6 +375,9 @@ class SnakeCog(commands.Cog):
                     else:
                         rendered += HEAD_DEAD
                 
+                elif grid[i][j] == 1:
+                    rendered += TAIL
+
                 else:
                     rendered += SNAKE_BODY
         

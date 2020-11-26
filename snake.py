@@ -297,7 +297,7 @@ class SnakeCog(commands.Cog):
         color = self.save_data['configuration']['embed_color']
         embed_color = discord.Colour.from_rgb(color[0], color[1], color[2])
         embed = discord.Embed(description=rendered_grid, color=embed_color, timestamp=next_update)
-        embed.set_author(name=f'Score: {self.save_data["score"]}\nBest: {self.save_data["best"]}')
+        embed.title = f'Score: {self.save_data["score"]}\nBest: {self.save_data["best"]}'
         embed.set_footer(text='Next update ')
 
         if dead:
